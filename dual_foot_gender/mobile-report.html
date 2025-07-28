@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>발 분석 리포트 - 모바일</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-4 max-w-2xl">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- 헤더 -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                <h1 class="text-2xl font-bold mb-2" id="report-title">3D 발 분석 리포트</h1>
+                <p class="text-blue-100" id="report-subtitle">정밀 측정 및 맞춤형 분석 결과</p>
+            </div>
+
+            <!-- 리포트 내용 -->
+            <div id="report-content" class="p-6">
+                <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-600">리포트를 불러오는 중...</p>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="p-6 bg-gray-50 border-t">
+                <button onclick="downloadPDF()"
+                    class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg mb-3 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    PDF 다운로드
+                </button>
+
+                <button onclick="shareReport()"
+                    class="w-full bg-green-600 text-white py-3 px-4 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z">
+                        </path>
+                    </svg>
+                    리포트 공유
+                </button>
+            </div>
+        </div>
+
+        <!-- 푸터 -->
+        <div class="text-center text-gray-500 text-sm mt-6">
+            <p>RunSync by 서진이네</p>
+            <p>정밀한 발 측정 및 분석 시스템</p>
+        </div>
+    </div>
+
+    <script>
+        let reportData = null;
+        let isDualFoot = false;
+
+        // URL 파라미터에서 데이터 추출 및 표시
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('data');
+
+            if (encodedData) {
+                try {
+                    const jsonData = decodeURIComponent(escape(atob(encodedData)));
+                    const compactData = JSON.parse(jsonData);
+                    
+                    // 양발 데이터인지 확인
+                    isDualFoot = compactData.type === 'dual';
+                    
+                    if (isDualFoot) {
+                        reportData = rehydrateDualFootData(compactData);
+                        displayDualFootReport(reportData);
+                    } else {
+                        reportData = rehydrateReportData(compactData);
+                        displaySingleFootReport(reportData);
+                    }
+                } catch (error) {
+                    console.error('데이터 디코딩 오류:', error);
+                    showError('리포트 데이터를 불러올 수 없습니다.');
+                }
+            } else {
+                showError('리포트 데이터가 없습니다.');
+            }
+        });
+
+        /**
+         * 양발 QR 데이터를 전체 리포트 데이터로 변환
+         */
+        function rehydrateDualFootData(compactData) {
+            const avgLen = compactData.m.l;
+            const avgWid = compactData.m.w;
+            const avgHei = compactData.m.h;
+
+            // 개별 발 데이터 추출
+            const leftFoot = compactData.lf ? {
+                length: compactData.lf.l,
+                width: compactData.lf.w,
+                height: compactData.lf.h,
+                unit: compactData.m.u
+            } : null;
+
+            const rightFoot = compactData.rf ? {
+                length: compactData.rf.l,
+                width: compactData.rf.w,
+                height: compactData.rf.h,
+                unit: compactData.m.u
+            } : null;
+
+            // 발 유형 디코딩
+            let footType = 'Normal Foot Type';
+            if (compactData.t === 'L') footType = 'Long Foot Type';
+            else if (compactData.t === 'W') footType = 'Wide Foot Type';
+
+            let archType = 'Normal Arch';
+            if (compactData.a === 'H') archType = 'High Arch';
+            else if (compactData.a === 'F') archType = 'Low Arch / Flat Foot';
+
+            const descriptions = {
+                'Long Foot Type': 'Elongated foot shape with longer toes and narrow profile',
+                'Wide Foot Type': 'Broader foot shape with wider forefoot area',
+                'Normal Foot Type': 'Well-balanced foot proportions with standard dimensions',
+            };
+
+            return {
+                fileName: compactData.f,
+                analysisDate: compactData.d,
+                isDualFoot: true,
+                averageMeasurements: {
+                    length: avgLen.toFixed(1),
+                    width: avgWid.toFixed(1),
+                    height: avgHei.toFixed(1),
+                    unit: compactData.m.u
+                },
+                leftFoot: leftFoot,
+                rightFoot: rightFoot,
+                ratios: {
+                    lengthWidth: (avgLen && avgWid) ? (avgLen / avgWid).toFixed(2) : 'N/A',
+                    heightLength: (avgHei && avgLen) ? ((avgHei / avgLen) * 100).toFixed(1) + '%' : 'N/A'
+                },
+                analysis: {
+                    footType: footType,
+                    archType: archType,
+                    description: descriptions[footType] || 'Analysis based on QR data.'
+                },
+                comparison: leftFoot && rightFoot ? {
+                    lengthDiff: Math.abs(leftFoot.length - rightFoot.length).toFixed(1),
+                    widthDiff: Math.abs(leftFoot.width - rightFoot.width).toFixed(1),
+                    heightDiff: Math.abs(leftFoot.height - rightFoot.height).toFixed(1),
+                    symmetryScore: calculateSymmetryScore(leftFoot, rightFoot)
+                } : null
+            };
+        }
+
+        /**
+         * 대칭성 점수 계산
+         */
+        function calculateSymmetryScore(leftFoot, rightFoot) {
+            const lengthDiff = Math.abs(leftFoot.length - rightFoot.length);
+            const widthDiff = Math.abs(leftFoot.width - rightFoot.width);
+            const heightDiff = Math.abs(leftFoot.height - rightFoot.height);
+
+            const maxLength = Math.max(leftFoot.length, rightFoot.length);
+            const maxWidth = Math.max(leftFoot.width, rightFoot.width);
+            const maxHeight = Math.max(leftFoot.height, rightFoot.height);
+            
+            const lengthSymmetry = (1 - lengthDiff / maxLength) * 100;
+            const widthSymmetry = (1 - widthDiff / maxWidth) * 100;
+            const heightSymmetry = (1 - heightDiff / maxHeight) * 100;
+            
+            return Math.round((lengthSymmetry + widthSymmetry + heightSymmetry) / 3);
+        }
+
+        /**
+         * 양발 리포트 표시
+         */
+        function displayDualFootReport(data) {
+            // 헤더 업데이트
+            document.getElementById('report-title').textContent = '3D 양발 분석 리포트';
+            document.getElementById('report-subtitle').textContent = '양발 정밀 측정 및 대칭성 분석 결과';
+
+            const content = document.getElementById('report-content');
+            const analysisDate = new Date(data.analysisDate);
+
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- 파일 정보 -->
+                    <div class="border-b pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">📁 파일 정보</h3>
+                        <div class="grid grid-cols-1 gap-2 text-sm">
+                            <div>
+                                <span class="text-gray-600">파일명:</span>
+                                <p class="font-medium">${data.fileName}</p>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">분석일:</span>
+                                <p class="font-medium">${analysisDate.toLocaleDateString('ko-KR')}</p>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">분석 유형:</span>
+                                <p class="font-medium text-blue-600">양발 종합 분석</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 평균 측정 데이터 -->
+                    <div class="border-b pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">📏 평균 측정 데이터</h3>
+                        <div class="grid grid-cols-1 gap-3">
+                            <div class="bg-blue-50 p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-blue-800 font-medium">평균 발 길이</span>
+                                    <span class="text-blue-900 font-bold">${data.averageMeasurements.length} ${data.averageMeasurements.unit}</span>
+                                </div>
+                            </div>
+                            <div class="bg-green-50 p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-green-800 font-medium">평균 발 너비</span>
+                                    <span class="text-green-900 font-bold">${data.averageMeasurements.width} ${data.averageMeasurements.unit}</span>
+                                </div>
+                            </div>
+                            <div class="bg-purple-50 p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-purple-800 font-medium">평균 발 높이</span>
+                                    <span class="text-purple-900 font-bold">${data.averageMeasurements.height} ${data.averageMeasurements.unit}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${data.leftFoot && data.rightFoot ? `
+                    <!-- 개별 발 측정 데이터 -->
+                    <div class="border-b pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">👥 개별 발 측정 데이터</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- 왼발 -->
+                            <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                                <h4 class="font-semibold text-blue-800 mb-2">👈 왼발</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>길이:</span>
+                                        <span class="font-mono">${data.leftFoot.length.toFixed(1)} ${data.leftFoot.unit}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>너비:</span>
+                                        <span class="font-mono">${data.leftFoot.width.toFixed(1)} ${data.leftFoot.unit}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>높이:</span>
+                                        <span class="font-mono">${data.leftFoot.height.toFixed(1)} ${data.leftFoot.unit}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 오른발 -->
+                            <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                                <h4 class="font-semibold text-green-800 mb-2">👉 오른발</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>길이:</span>
+                                        <span class="font-mono">${data.rightFoot.length.toFixed(1)} ${data.rightFoot.unit}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>너비:</span>
+                                        <span class="font-mono">${data.rightFoot.width.toFixed(1)} ${data.rightFoot.unit}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>높이:</span>
+                                        <span class="font-mono">${data.rightFoot.height.toFixed(1)} ${data.rightFoot.unit}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 대칭성 분석 -->
+                    <div class="border-b pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">⚖️ 대칭성 분석</h3>
+                        <div class="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg">
+                            <div class="text-center mb-4">
+                                <div class="text-3xl font-bold ${data.comparison.symmetryScore >= 90 ? 'text-green-600' : data.comparison.symmetryScore >= 80 ? 'text-yellow-600' : 'text-red-600'}">${data.comparison.symmetryScore}%</div>
+                                <div class="text-sm text-gray-600">대칭성 점수</div>
+                            </div>
+                            <div class="grid grid-cols-1 gap-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span>길이 차이:</span>
+                                    <span class="font-mono">${data.comparison.lengthDiff} mm</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>너비 차이:</span>
+                                    <span class="font-mono">${data.comparison.widthDiff} mm</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>높이 차이:</span>
+                                    <span class="font-mono">${data.comparison.heightDiff} mm</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 p-3 bg-white rounded text-center">
+                                <p class="text-sm ${data.comparison.symmetryScore >= 90 ? 'text-green-700' : data.comparison.symmetryScore >= 80 ? 'text-yellow-700' : 'text-red-700'}">
+                                    ${getDualFootSymmetryAssessment(data.comparison.symmetryScore)}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- 비율 분석 -->
+                    <div class="border-b pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">📊 비율 분석</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-blue-600">${data.ratios.lengthWidth}</div>
+                                <div class="text-sm text-gray-600">길이/너비 비율</div>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-cyan-600">${data.ratios.heightLength}</div>
+                                <div class="text-sm text-gray-600">높이/길이 비율</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 발 유형 분석 -->
+                    <div class="border-b pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">👣 발 유형 분석</h3>
+                        <div class="space-y-3">
+                            <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold text-blue-800">발 형태</span>
+                                    <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">${getKoreanFootType(data.analysis.footType)}</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-purple-800">아치 유형</span>
+                                    <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm">${getKoreanArchType(data.analysis.archType)}</span>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm leading-relaxed">${getKoreanDescription(data.analysis.description)}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 맞춤형 추천 -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">💡 맞춤형 추천</h3>
+                        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+                            <div class="space-y-2">
+                                ${getDualFootRecommendations(data).map(rec => `<div class="flex items-start"><span class="text-green-600 mr-2">•</span><span class="text-sm text-green-800">${rec}</span></div>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * 단일 발 QR코드로 받은 압축 데이터를 전체 리포트 데이터 형식으로 변환하는 함수 (기존 유지)
+         */
+        function rehydrateReportData(compactData) {
+            const len = compactData.m.l;
+            const wid = compactData.m.w;
+            const hei = compactData.m.h;
+
+            let footType = 'Normal Foot Type';
+            if (compactData.t === 'L') footType = 'Long Foot Type';
+            else if (compactData.t === 'W') footType = 'Wide Foot Type';
+
+            let archType = 'Normal Arch';
+            if (compactData.a === 'H') archType = 'High Arch';
+            else if (compactData.a === 'F') archType = 'Low Arch / Flat Foot';
+
+            const descriptions = {
+                'Long Foot Type': 'Elongated foot shape with longer toes and narrow profile',
+                'Wide Foot Type': 'Broader foot shape with wider forefoot area',
+                'Normal Foot Type': 'Well-balanced foot proportions with standard dimensions',
+            };
+
+            return {
+                fileName: compactData.f,
+                analysisDate: compactData.d,
+                isDualFoot: false,
+                measurements: {
+                    length: len.toFixed(1),
+                    width: wid.toFixed(1),
+                    height: hei.toFixed(1),
+                    unit: compactData.m.u,
+                    confidence: 'N/A (From QR)'
+                },
+                ratios: {
+                    lengthWidth: (len && wid) ? (len / wid).toFixed(2) : 'N/A',
+                    heightLength: (hei && len) ? ((hei / len) * 100).toFixed(1) + '%' : 'N/A'
+                },
+                analysis: {
+                    footType: footType,
+                    archType: archType,
+                    description: descriptions[footType] || 'Analysis based on QR data.'
+                },
+            };
+        }
+
+        /**
+         * 단일 발 리포트 내용을 화면에 표시하는 함수 (기존 유지)
+         */
+        function displaySingleFootReport(data) {
+            const content = document.getElementById('report-content');
+            const analysisDate = new Date(data.analysisDate);
+
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- 파일 정보 -->
+                    <div class="border-b pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">📁 파일 정보</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-600">파일명:</span>
+                                <p class="font-medium">${data.fileName}</p>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">분석일:</span>
+                                <p class="font-medium">${analysisDate.toLocaleDateString('ko-KR')}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 측정 데이터 -->
+                    <div class="border-b pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">📏 측정 데이터</h3>
+                        <div class="grid grid-cols-1 gap-3">
+                            <div class="bg-red-50 p-3 rounded-lg"><div class="flex justify-between items-center"><span class="text-red-800 font-medium">발 길이</span><span class="text-red-900 font-bold">${data.measurements.length} ${data.measurements.unit}</span></div></div>
+                            <div class="bg-yellow-50 p-3 rounded-lg"><div class="flex justify-between items-center"><span class="text-yellow-800 font-medium">발 너비</span><span class="text-yellow-900 font-bold">${data.measurements.width} ${data.measurements.unit}</span></div></div>
+                            <div class="bg-purple-50 p-3 rounded-lg"><div class="flex justify-between items-center"><span class="text-purple-800 font-medium">발 높이</span><span class="text-purple-900 font-bold">${data.measurements.height} ${data.measurements.unit}</span></div></div>
+                            <div class="bg-blue-50 p-3 rounded-lg"><div class="flex justify-between items-center"><span class="text-blue-800 font-medium">측정 신뢰도</span><span class="text-blue-900 font-bold">${data.measurements.confidence}</span></div></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 비율 분석 -->
+                    <div class="border-b pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">📊 비율 분석</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-3 rounded-lg text-center"><div class="text-2xl font-bold text-blue-600">${data.ratios.lengthWidth}</div><div class="text-sm text-gray-600">길이/너비 비율</div></div>
+                            <div class="bg-gray-50 p-3 rounded-lg text-center"><div class="text-2xl font-bold text-cyan-600">${data.ratios.heightLength}</div><div class="text-sm text-gray-600">높이/길이 비율</div></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 발 유형 분석 -->
+                    <div class="border-b pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">👣 발 유형 분석</h3>
+                        <div class="space-y-3">
+                            <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
+                                <div class="flex items-center justify-between mb-2"><span class="font-semibold text-blue-800">발 형태</span><span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">${getKoreanFootType(data.analysis.footType)}</span></div>
+                                <div class="flex items-center justify-between"><span class="font-semibold text-purple-800">아치 유형</span><span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm">${getKoreanArchType(data.analysis.archType)}</span></div>
+                            </div>
+                            <p class="text-gray-700 text-sm leading-relaxed">${getKoreanDescription(data.analysis.description)}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 추천 사항 -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">💡 맞춤형 추천</h3>
+                        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg"><div class="space-y-2">${getSingleFootRecommendations(data).map(rec => `<div class="flex items-start"><span class="text-green-600 mr-2">•</span><span class="text-sm text-green-800">${rec}</span></div>`).join('')}</div></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * 오류 메시지를 화면에 표시하는 함수
+         */
+        function showError(message) {
+            const content = document.getElementById('report-content');
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="text-red-500 text-6xl mb-4">⚠️</div>
+                    <p class="text-red-600 font-medium">${message}</p>
+                    <button onclick="location.reload()" class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg">
+                        다시 시도
+                    </button>
+                </div>
+            `;
+        }
+
+        // --- 대칭성 평가 함수 (새로 추가) ---
+        function getDualFootSymmetryAssessment(score) {
+            if (score >= 95) {
+                return '완벽한 대칭성을 보입니다. 매우 균형잡힌 발 구조입니다.';
+            } else if (score >= 90) {
+                return '우수한 대칭성을 보입니다. 균형잡힌 발 구조를 가지고 있습니다.';
+            } else if (score >= 80) {
+                return '양호한 대칭성을 보입니다. 약간의 차이는 있지만 정상 범위입니다.';
+            } else if (score >= 70) {
+                return '보통 수준의 대칭성입니다. 약간의 주의가 필요합니다.';
+            } else if (score >= 60) {
+                return '대칭성이 다소 부족합니다. 정기적인 관찰이 필요합니다.';
+            } else {
+                return '상당한 비대칭성이 관찰됩니다. 전문의 상담을 권장합니다.';
+            }
+        }
+
+        // --- 양발 추천사항 생성 함수 (새로 추가) ---
+        function getDualFootRecommendations(data) {
+            const recommendations = [];
+            
+            // 대칭성 기반 추천
+            if (data.comparison) {
+                const score = data.comparison.symmetryScore;
+                if (score >= 90) {
+                    recommendations.push('우수한 대칭성으로 일반적인 신발 착용이 적합합니다');
+                } else if (score >= 80) {
+                    recommendations.push('양호한 대칭성이나 정기적인 발 건강 체크를 권장합니다');
+                } else {
+                    recommendations.push('대칭성 개선을 위한 발 운동 및 전문의 상담을 권장합니다');
+                }
+
+                // 개별 차이 기반 추천
+                const lengthDiff = parseFloat(data.comparison.lengthDiff);
+                const widthDiff = parseFloat(data.comparison.widthDiff);
+                const heightDiff = parseFloat(data.comparison.heightDiff);
+
+                if (lengthDiff > 5) {
+                    recommendations.push('발 길이 차이로 인해 맞춤 깔창 사용을 고려해보세요');
+                }
+                if (widthDiff > 3) {
+                    recommendations.push('발 너비 차이로 인해 넉넉한 폭의 신발을 선택하세요');
+                }
+                if (heightDiff > 4) {
+                    recommendations.push('발 높이 차이로 인해 아치 서포트가 있는 깔창을 추천합니다');
+                }
+            }
+
+            // 평균 발 형태 기반 추천
+            const lwRatio = parseFloat(data.ratios.lengthWidth);
+            const hlRatioStr = data.ratios.heightLength || '0%';
+            const hlRatio = parseFloat(hlRatioStr.replace('%', ''));
+
+            if (lwRatio > 2.6) {
+                recommendations.push('긴 발형으로 앞코가 여유로운 신발을 선택하세요');
+                recommendations.push('일반 또는 와이드 폭의 신발을 권장합니다');
+            } else if (lwRatio < 2.2) {
+                recommendations.push('넓은 발형으로 와이드 피팅 신발이 필수입니다');
+                recommendations.push('좁거나 뾰족한 신발 디자인은 피하세요');
+            } else {
+                recommendations.push('표준 비율의 발로 일반적인 신발이 적합합니다');
+                recommendations.push('대부분의 표준 신발 디자인이 잘 맞을 것입니다');
+            }
+
+            if (hlRatio > 25) {
+                recommendations.push('높은 아치로 강한 아치 서포트가 필요합니다');
+                recommendations.push('충격 흡수가 우수한 신발을 선택하세요');
+            } else if (hlRatio < 18) {
+                recommendations.push('낮은 아치로 모션 컨트롤 기능이 있는 신발을 권장합니다');
+                recommendations.push('단단한 뒤꿈치 지지대가 있는 신발이 좋습니다');
+            } else {
+                recommendations.push('정상 아치로 일반 운동화나 워킹화가 적합합니다');
+                recommendations.push('적당한 쿠셔닝과 안정성을 제공하는 신발을 선택하세요');
+            }
+
+            // 양발 전용 추천
+            recommendations.push('양발의 건강을 위해 정기적인 발 운동을 실시하세요');
+            recommendations.push('양발 상태를 정기적으로 확인하고 변화를 관찰하세요');
+
+            return recommendations;
+        }
+
+        // --- 한글 번역 및 추천 생성 함수들 (기존 유지) ---
+        function getKoreanFootType(footType) {
+            switch (footType) {
+                case 'Long Foot Type': return '긴 발형';
+                case 'Wide Foot Type': return '넓은 발형';
+                case 'Normal Foot Type': return '표준 발형';
+                default: return '분석 중';
+            }
+        }
+
+        function getKoreanArchType(archType) {
+            switch (archType) {
+                case 'High Arch': return '높은 아치';
+                case 'Low Arch / Flat Foot': return '낮은 아치';
+                case 'Normal Arch': return '정상 아치';
+                default: return '분석 중';
+            }
+        }
+
+        function getKoreanDescription(description) {
+            const translations = {
+                'Elongated foot shape with longer toes and narrow profile': '발가락이 길고 전체적으로 세련된 형태입니다.',
+                'Broader foot shape with wider forefoot area': '발볼이 넓고 안정적인 형태입니다.',
+                'Well-balanced foot proportions with standard dimensions': '균형잡힌 비례를 가진 표준적인 발 형태입니다.',
+                'Insufficient data for comprehensive analysis': '포괄적인 분석을 위한 데이터가 부족합니다.'
+            };
+            return translations[description] || description;
+        }
+
+        function getSingleFootRecommendations(data) {
+            const lwRatio = parseFloat(data.ratios.lengthWidth);
+            const hlRatioString = data.ratios.heightLength || '0%';
+            const hlRatio = parseFloat(hlRatioString.replace('%', ''));
+            const recommendations = [];
+
+            if (lwRatio > 2.6) {
+                recommendations.push('앞코가 여유로운 신발을 선택하세요');
+                recommendations.push('좁은 신발보다는 일반 폭 이상을 권장합니다');
+            } else if (lwRatio < 2.2) {
+                recommendations.push('와이드 피팅 신발을 고려해보세요');
+                recommendations.push('발볼 부위 압박이 적은 디자인이 좋습니다');
+            } else {
+                recommendations.push('일반적인 폭의 신발이 적합합니다');
+                recommendations.push('대부분의 표준 신발 디자인이 잘 맞을 것입니다');
+            }
+
+            if (hlRatio > 25) {
+                recommendations.push('아치 서포트가 강한 깔창을 사용하세요');
+                recommendations.push('충격 흡수 기능이 뛰어난 신발을 선택하세요');
+            } else if (hlRatio < 18) {
+                recommendations.push('모션 컨트롤 기능이 있는 신발을 권장합니다');
+                recommendations.push('단단한 뒤꿈치 지지대가 있는 신발이 좋습니다');
+            } else {
+                recommendations.push('일반적인 러닝화나 워킹화가 적합합니다');
+                recommendations.push('적당한 쿠셔닝과 안정성을 제공하는 신발을 선택하세요');
+            }
+
+            return recommendations;
+        }
+
+        // --- PDF 다운로드 및 공유 기능 ---
+        function downloadPDF() {
+            if (!reportData) {
+                alert('리포트 데이터가 없습니다.');
+                return;
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                if (isDualFoot) {
+                    // 양발 PDF 생성
+                    doc.setFontSize(20);
+                    doc.text('Dual Foot 3D Analysis Report', 20, 30);
+                    
+                    doc.setFontSize(12);
+                    doc.text(`File: ${reportData.fileName}`, 20, 50);
+                    doc.text(`Analysis Date: ${new Date(reportData.analysisDate).toLocaleDateString()}`, 20, 60);
+                    doc.text('Report Type: Dual Foot Analysis', 20, 70);
+
+                    // 평균 측정 데이터
+                    doc.setFontSize(16);
+                    doc.text('Average Measurements', 20, 90);
+                    doc.setFontSize(12);
+                    doc.text(`Length: ${reportData.averageMeasurements.length} ${reportData.averageMeasurements.unit}`, 20, 105);
+                    doc.text(`Width: ${reportData.averageMeasurements.width} ${reportData.averageMeasurements.unit}`, 20, 115);
+                    doc.text(`Height: ${reportData.averageMeasurements.height} ${reportData.averageMeasurements.unit}`, 20, 125);
+
+                    if (reportData.leftFoot && reportData.rightFoot) {
+                        // 개별 발 데이터
+                        doc.setFontSize(16);
+                        doc.text('Individual Foot Data', 20, 145);
+                        doc.setFontSize(12);
+                        doc.text('Left Foot:', 20, 160);
+                        doc.text(`  Length: ${reportData.leftFoot.length.toFixed(1)} ${reportData.leftFoot.unit}`, 25, 170);
+                        doc.text(`  Width: ${reportData.leftFoot.width.toFixed(1)} ${reportData.leftFoot.unit}`, 25, 180);
+                        doc.text(`  Height: ${reportData.leftFoot.height.toFixed(1)} ${reportData.leftFoot.unit}`, 25, 190);
+
+                        doc.text('Right Foot:', 20, 205);
+                        doc.text(`  Length: ${reportData.rightFoot.length.toFixed(1)} ${reportData.rightFoot.unit}`, 25, 215);
+                        doc.text(`  Width: ${reportData.rightFoot.width.toFixed(1)} ${reportData.rightFoot.unit}`, 25, 225);
+                        doc.text(`  Height: ${reportData.rightFoot.height.toFixed(1)} ${reportData.rightFoot.unit}`, 25, 235);
+
+                        // 대칭성 분석
+                        doc.setFontSize(16);
+                        doc.text('Symmetry Analysis', 20, 255);
+                        doc.setFontSize(12);
+                        doc.text(`Symmetry Score: ${reportData.comparison.symmetryScore}%`, 20, 270);
+                    }
+
+                    const fileName = `dual_foot_analysis_${reportData.fileName.replace('.ply', '')}_mobile.pdf`;
+                    doc.save(fileName);
+                } else {
+                    // 단일 발 PDF 생성 (기존 로직)
+                    doc.setFontSize(20);
+                    doc.text('3D Foot Analysis Report', 20, 30);
+                    doc.setFontSize(12);
+                    doc.text(`File: ${reportData.fileName}`, 20, 50);
+                    doc.text(`Analysis Date: ${new Date(reportData.analysisDate).toLocaleDateString()}`, 20, 60);
+                    doc.setFontSize(16);
+                    doc.text('Measurements', 20, 80);
+                    doc.setFontSize(12);
+                    doc.text(`Length: ${reportData.measurements.length} ${reportData.measurements.unit}`, 20, 95);
+                    doc.text(`Width: ${reportData.measurements.width} ${reportData.measurements.unit}`, 20, 105);
+                    doc.text(`Height: ${reportData.measurements.height} ${reportData.measurements.unit}`, 20, 115);
+                    doc.setFontSize(16);
+                    doc.text('Ratios', 20, 135);
+                    doc.setFontSize(12);
+                    doc.text(`L/W Ratio: ${reportData.ratios.lengthWidth}`, 20, 150);
+                    doc.text(`H/L Ratio: ${reportData.ratios.heightLength}`, 20, 160);
+                    doc.setFontSize(16);
+                    doc.text('Foot Analysis', 20, 180);
+                    doc.setFontSize(12);
+                    doc.text(`Foot Type: ${reportData.analysis.footType}`, 20, 195);
+                    doc.text(`Arch Type: ${reportData.analysis.archType}`, 20, 205);
+
+                    const fileName = `foot_analysis_${reportData.fileName.replace('.ply', '')}_mobile.pdf`;
+                    doc.save(fileName);
+                }
+
+            } catch (error) {
+                console.error('PDF 생성 오류:', error);
+                alert('PDF 생성 중 오류가 발생했습니다.');
+            }
+        }
+
+        function shareReport() {
+            if (navigator.share) {
+                const title = isDualFoot ? '3D 양발 분석 리포트' : '3D 발 분석 리포트';
+                const text = isDualFoot ? 
+                    `${reportData?.fileName || '양발 분석'} 결과를 확인해보세요. 대칭성 점수: ${reportData?.comparison?.symmetryScore || 'N/A'}%` :
+                    `${reportData?.fileName || '발 분석'} 결과를 확인해보세요.`;
+                
+                navigator.share({
+                    title: title,
+                    text: text,
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('리포트 링크가 클립보드에 복사되었습니다.');
+                }).catch(() => {
+                    alert('공유 기능을 지원하지 않는 브라우저입니다.');
+                });
+            }
+        }
+    </script>
+</body>
+
+</html>

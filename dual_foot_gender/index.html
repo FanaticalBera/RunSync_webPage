@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RunSync</title>
+    <link rel="icon"
+        href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0iIzM1N0VGRiI+PHBhdGggZD0iTTQyLjQzNzkgNDRDNDIuNDM3OSA0NCAzNi4wNzQ0IDMzLjkwMzggNDEuMTY5MiAyNEM0Ni44NjI0IDEyLjkzMzYgNDIuMjA3OCA0IDQyLjIwNzggNEw3LjAxMTM0IDRDNy4wMTEzNCA0IDExLjY1NzcgMTIuOTMyIDUuOTY5MTIgMjMuOTk2OUMwLjg3NjI3MyAzMy45MDI5IDcuMjcwOTQgNDQgNy4yNzA5NCA0NEw0Mi40Mzc5IDQ0WiIvPjwvc3ZnPg=="
+        type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="./styles.css">
+    <style type="text/tailwindcss">
+        :root {
+            --primary-500: #1993e5;
+            --secondary-700: #243947;
+            --base-900: #111b22;
+            --base-50: #f7f9fa;
+        }
+        body {
+            font-family: "Space Grotesk", "Noto Sans KR", sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-[#1C1F29] text-gray-300 font-sans">
+
+    <body class="bg-[var(--base-900)] text-white">
+
+        <!-- 새로운 환영 화면 -->
+        <div id="welcome-screen"
+            class="flex flex-col items-center justify-center min-h-screen p-4 transition-opacity duration-500">
+            <div class="w-full max-w-2xl text-center">
+
+                <!-- 로고 및 제목 -->
+                <div class="flex items-center justify-center gap-3 mb-4">
+                    <svg class="h-10 w-10 text-blue-500" fill="currentColor" viewBox="0 0 48 48"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z">
+                        </path>
+                    </svg>
+                    <h1 class="text-4xl font-bold tracking-tighter text-white">RunSync</h1>
+                </div>
+                <p class="text-lg text-gray-400 mb-10">정밀 3D 양발 분석 시스템</p>
+
+                <!-- 사용자 정보 입력 -->
+                <div class="bg-[#252834] p-8 rounded-xl shadow-lg border border-gray-700/50 mb-6">
+                    <h2 class="text-xl font-semibold text-white mb-6">분석을 시작하기 위해 사용자 정보를 입력하세요.</h2>
+                    <div class="mb-4">
+                        <label for="user-name-input" class="block text-sm font-medium text-gray-400 mb-2 text-left">사용자
+                            이름</label>
+                        <input type="text" id="user-name-input" placeholder="사용자 이름을 입력해주세요"
+                            class="w-full px-4 py-3 bg-[#1C1F29] border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                    </div>
+
+                    <!-- 성별 -->
+                    <!-- 성별 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-400 mb-2 text-left">성별</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <button data-gender="남성"
+                                class="gender-btn flex items-center justify-center gap-2 py-3 bg-[#1C1F29] border border-gray-600 rounded-lg hover:bg-gray-700 transition">
+                                <i class="fas fa-mars"></i> 남성
+                            </button>
+                            <button data-gender="여성"
+                                class="gender-btn flex items-center justify-center gap-2 py-3 bg-[#1C1F29] border border-gray-600 rounded-lg hover:bg-gray-700 transition">
+                                <i class="fas fa-venus"></i> 여성
+                            </button>
+                        </div>
+                        <input type="hidden" id="gender-input" value="">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">이 정보는 리포트 생성에 사용됩니다.</p>
+                </div>
+
+                <!-- 파일 업로드 영역은 대시보드 화면에 있으므로 여기서는 시작 버튼만 제공 -->
+                <button id="start-app-btn"
+                    class="w-full max-w-xs mx-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-transform duration-200 hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed disabled:scale-100">
+                    분석 시작하기
+                </button>
+            </div>
+
+            <!-- 파일 입력을 위한 숨겨진 요소들 -->
+            <input type="file" id="left-file-input" accept=".ply" class="hidden">
+            <input type="file" id="right-file-input" accept=".ply" class="hidden">
+        </div>
+
+        <!-- 대시보드 화면 -->
+        <div id="dashboard-screen" class="hidden h-screen flex flex-col transition-opacity duration-500 opacity-0">
+            <!-- 상단 헤더 -->
+            <header class="bg-[#252834] p-4 flex items-center justify-between border-b border-gray-700/50">
+                <div class="flex items-center gap-4">
+                    <a class="flex items-center gap-3" href="#">
+                        <svg class="h-8 w-8 text-[var(--primary-500)]" fill="none" viewBox="0 0 48 48"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
+                                fill="currentColor"></path>
+                        </svg>
+                        <h2 class="text-xl font-bold leading-tight tracking-tighter">RunSync</h2>
+                    </a>
+                    <span class="text-sm text-gray-400">사용자: <span id="patient-name">김철수</span></span>
+                </div>
+
+                <!-- 진행 단계 -->
+                <div class="flex-grow flex justify-center items-center">
+                    <div id="progress-bar" class="flex items-center gap-2 sm:gap-4">
+                        <!-- 단계 1 -->
+                        <div class="progress-step active" data-step="1">
+                            <div class="step-circle">1</div>
+                            <div class="step-text">
+                                <p class="font-semibold">3D 분석</p>
+                                <p class="text-xs text-gray-400">파일 처리 및 분석</p>
+                            </div>
+                        </div>
+                        <div class="step-connector"></div>
+                        <!-- 단계 2 -->
+                        <div class="progress-step" data-step="2">
+                            <div class="step-circle">2</div>
+                            <div class="step-text">
+                                <p class="font-semibold">결과 확인</p>
+                                <p class="text-xs text-gray-400">측정 및 진단 결과</p>
+                            </div>
+                        </div>
+                        <div class="step-connector"></div>
+                        <!-- 단계 3 -->
+                        <div class="progress-step" data-step="3">
+                            <div class="step-circle">3</div>
+                            <div class="step-text">
+                                <p class="font-semibold">리포트 생성</p>
+                                <p class="text-xs text-gray-400">최종 리포트 작성</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <button id="prev-step-btn" class="text-gray-400 hover:text-white transition hidden"><i
+                            class="fas fa-arrow-left mr-2"></i> 이전 단계</button>
+                    <button id="next-step-btn"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">다음 단계
+                        <i class="fas fa-arrow-right ml-2"></i></button>
+                    <div class="flex items-center gap-3 text-lg">
+                        <button class="text-gray-400 hover:text-white transition"><i
+                                class="fas fa-history"></i></button>
+                        <button class="text-gray-400 hover:text-white transition"><i class="fas fa-cog"></i></button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 메인 컨텐츠 -->
+            <main class="flex-1 flex overflow-hidden">
+                <!-- 3D 뷰어 -->
+                <div class="flex-1 flex flex-col p-4">
+                    <!-- 양발 파일 업로드 섹션 -->
+                    <div id="foot-upload-section" class="mb-4 p-4 bg-[#252834] rounded-lg">
+                        <h3 class="text-lg font-semibold mb-4 text-center">양발 3D 모델 업로드</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- 왼발 업로드 -->
+                            <div class="foot-upload-area" id="left-foot-upload">
+                                <div
+                                    class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 transition cursor-pointer">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm font-medium mb-1">왼발 3D 모델</p>
+                                    <p class="text-xs text-gray-400">PLY 파일을 드래그하거나 클릭하여 선택</p>
+                                    <div class="mt-2">
+                                        <span id="left-foot-status" class="text-xs text-gray-500">대기 중...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 오른발 업로드 -->
+                            <div class="foot-upload-area" id="right-foot-upload">
+                                <div
+                                    class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 transition cursor-pointer">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm font-medium mb-1">오른발 3D 모델</p>
+                                    <p class="text-xs text-gray-400">PLY 파일을 드래그하거나 클릭하여 선택</p>
+                                    <div class="mt-2">
+                                        <span id="right-foot-status" class="text-xs text-gray-500">대기 중...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <button id="start-analysis-btn"
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                disabled>
+                                <i class="fas fa-play mr-2"></i>분석 시작
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 뷰어 툴바 -->
+                    <div class="mb-2 p-2 bg-[#252834] rounded-lg flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-semibold mr-2">뷰 모드</span>
+                            <div class="flex items-center bg-[#1C1F29] rounded-md p-1">
+                                <button class="view-btn active" data-view="mesh"><i
+                                        class="fas fa-cubes px-2"></i></button>
+                                <button class="view-btn" data-view="wireframe"><i
+                                        class="fas fa-vector-square px-2"></i></button>
+                                <button class="view-btn" data-view="points"><i class="fas fa-braille px-2"></i></button>
+                            </div>
+                            <!-- 발 선택 버튼 -->
+                            <div class="flex items-center bg-[#1C1F29] rounded-md p-1 ml-4">
+                                <button class="foot-btn active" data-foot="both"><i
+                                        class="fas fa-expand-arrows-alt px-2"></i> 양발</button>
+                                <button class="foot-btn" data-foot="left"><i class="fas fa-arrow-left px-2"></i>
+                                    왼발</button>
+                                <button class="foot-btn" data-foot="right"><i class="fas fa-arrow-right px-2"></i>
+                                    오른발</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-lightbulb text-gray-400"></i>
+                                <span class="text-sm">밝기</span>
+                                <input type="range" min="0" max="100" value="100" class="w-24 h-1 accent-blue-500">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-th text-gray-400"></i>
+                                <label for="grid-toggle" class="text-sm cursor-pointer">그리드</label>
+                                <input type="checkbox" id="grid-toggle"
+                                    class="form-checkbox h-4 w-4 bg-gray-700 border-gray-600 rounded text-blue-500 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button id="reset-view-btn" class="toolbar-btn"><i class="fas fa-sync-alt mr-2"></i>뷰
+                                리셋</button>
+                            <button id="zoom-in-btn" class="toolbar-btn"><i class="fas fa-search-plus"></i></button>
+                            <button id="zoom-out-btn" class="toolbar-btn"><i class="fas fa-search-minus"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- 캔버스 -->
+                    <div id="canvas-container" class="flex-1 bg-[#1C1F29] rounded-lg relative min-h-0">
+                        <div class="absolute top-2 left-2 bg-black/30 p-2 rounded-md text-xs">
+                            <p id="model-filename">파일을 업로드해주세요</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 분석 패널 -->
+                <aside class="w-[400px] bg-[#252834] flex flex-col p-4 border-l border-gray-700/50">
+                    <!-- 탭 네비게이션 -->
+                    <div class="flex border-b border-gray-700/50 mb-4">
+                        <button class="tab-btn active" data-tab="measurement">
+                            <i class="fas fa-ruler-combined mr-2"></i>측정값
+                        </button>
+                        <button class="tab-btn" data-tab="comparison">
+                            <i class="fas fa-balance-scale mr-2"></i>양발 비교
+                        </button>
+                        <!-- <button class="tab-btn" data-tab="ai-analysis">
+                            <i class="fas fa-brain mr-2"></i>AI 분석
+                        </button> -->
+                        <button class="tab-btn" data-tab="report">
+                            <i class="fas fa-file-invoice mr-2"></i>리포트
+                        </button>
+                    </div>
+
+                    <!-- 탭 컨텐츠 -->
+                    <div class="flex-1 overflow-y-auto pr-2">
+                        <!-- 측정값 탭 -->
+                        <div id="tab-content-measurement" class="tab-content active">
+                            <h3 class="text-lg font-bold text-white mb-4">발 분석</h3>
+                            <p class="text-sm text-gray-400 mb-4">각 발에 대한 상세 측정 및 분석 결과입니다.</p>
+
+                            <div class="mb-6 flex bg-[#1C1F29] rounded-lg p-1">
+                                <button
+                                    class="measurement-foot-btn active flex-1 py-2 px-3 rounded-md text-sm font-medium transition"
+                                    data-foot="left">
+                                    왼발
+                                </button>
+                                <button
+                                    class="measurement-foot-btn flex-1 py-2 px-3 rounded-md text-sm font-medium transition"
+                                    data-foot="right">
+                                    오른발
+                                </button>
+                            </div>
+
+                            <div class="space-y-3" id="measurement-data">
+                                <div class="measurement-item-new">
+                                    <div class="flex items-center gap-4">
+                                        <span class="measurement-icon"><i class="fas fa-ruler-horizontal"></i></span>
+                                        <span class="font-semibold">길이</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <p id="length-value" class="text-lg font-mono text-gray-200">- mm</p>
+                                        <span id="length-tag" class="tag-display"></span>
+                                    </div>
+                                </div>
+                                <div class="measurement-item-new">
+                                    <div class="flex items-center gap-4">
+                                        <span class="measurement-icon"><i class="fas fa-arrows-alt-h"></i></span>
+                                        <span class="font-semibold">너비</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <p id="width-value" class="text-lg font-mono text-gray-200">- mm</p>
+                                        <span id="width-tag" class="tag-display"></span>
+                                    </div>
+                                </div>
+                                <div class="measurement-item-new">
+                                    <div class="flex items-center gap-4">
+                                        <span class="measurement-icon"><i class="fas fa-arrows-alt-v"></i></span>
+                                        <span class="font-semibold">높이</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <p id="height-value" class="text-lg font-mono text-gray-200">- mm</p>
+                                        <span id="height-tag" class="tag-display"></span>
+                                    </div>
+                                </div>
+                                <div class="measurement-item-new">
+                                    <div class="flex items-center gap-4">
+                                        <span class="measurement-icon"><i class="fas fa-chart-line"></i></span>
+                                        <span class="font-semibold">아치 비율</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <p id="arch-ratio-value" class="text-lg font-mono text-gray-200">-</p>
+                                        <span id="arch-ratio-tag" class="tag-display"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-gray-700/50">
+                                <h4 class="font-semibold mb-2">분석 요약</h4>
+                                <div id="measurement-summary"
+                                    class="text-sm text-gray-400 space-y-1 bg-[#1C1F29] p-3 rounded-lg">
+                                    <p>양발 데이터를 업로드하고 분석을 시작해주세요.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 양발 비교 탭 (새로 추가) -->
+                        <div id="tab-content-comparison" class="tab-content hidden">
+                            <h3 class="text-lg font-bold text-white mb-4">양발 비교 분석</h3>
+
+                            <!-- 대칭성 분석 -->
+                            <div class="mb-6 p-4 bg-gray-800/50 rounded-lg">
+                                <h4 class="font-semibold mb-3 flex items-center">
+                                    <i class="fas fa-balance-scale text-blue-400 mr-2"></i>
+                                    대칭성 분석
+                                </h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">길이 차이</span>
+                                        <span id="length-diff" class="font-mono text-green-400">- mm</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">너비 차이</span>
+                                        <span id="width-diff" class="font-mono text-green-400">- mm</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">높이 차이</span>
+                                        <span id="height-diff" class="font-mono text-green-400">- mm</span>
+                                    </div>
+                                    <div class="mt-3 pt-3 border-t border-gray-600">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-semibold">대칭성 점수</span>
+                                            <span id="symmetry-score" class="text-xl font-bold text-blue-400">-%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 상세 비교표 -->
+                            <div class="comparison-table bg-gray-800/50 rounded-lg p-4">
+                                <h4 class="font-semibold mb-3">상세 비교</h4>
+                                <div class="space-y-3 text-sm">
+                                    <div class="grid grid-cols-3 gap-2 font-semibold border-b border-gray-600 pb-2">
+                                        <span>측정 항목</span>
+                                        <span class="text-center">왼발</span>
+                                        <span class="text-center">오른발</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 py-1">
+                                        <span>길이</span>
+                                        <span id="left-length-compare" class="text-center font-mono">- mm</span>
+                                        <span id="right-length-compare" class="text-center font-mono">- mm</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 py-1">
+                                        <span>너비</span>
+                                        <span id="left-width-compare" class="text-center font-mono">- mm</span>
+                                        <span id="right-width-compare" class="text-center font-mono">- mm</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 py-1">
+                                        <span>높이</span>
+                                        <span id="left-height-compare" class="text-center font-mono">- mm</span>
+                                        <span id="right-height-compare" class="text-center font-mono">- mm</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 py-1">
+                                        <span>아치 비율</span>
+                                        <span id="left-arch-compare" class="text-center font-mono">-</span>
+                                        <span id="right-arch-compare" class="text-center font-mono">-</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 p-3 bg-blue-900/30 rounded-lg">
+                                <h5 class="font-semibold text-blue-300 mb-2">비교 분석 결과</h5>
+                                <div id="comparison-summary" class="text-sm text-gray-300">
+                                    <p>양발 분석 완료 후 대칭성과 차이점을 확인할 수 있습니다.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI 분석 탭 -->
+                        <div id="tab-content-ai-analysis" class="tab-content hidden">
+                            <h3 class="text-lg font-bold text-white mb-4">AI 분석 결과</h3>
+
+                            <!-- 전체 점수 -->
+                            <div class="text-center p-4 bg-gray-800/50 rounded-lg mb-4">
+                                <p class="text-sm text-gray-400">종합 점수</p>
+                                <p class="text-5xl font-bold text-green-400">-<span
+                                        class="text-2xl text-gray-400">/100</span></p>
+                                <p class="text-xs text-gray-500 mt-1">양발 평균 점수</p>
+                            </div>
+
+                            <!-- 발별 분석 -->
+                            <div class="space-y-4 mb-6">
+                                <!-- 왼발 분석 -->
+                                <div class="bg-gray-800/30 rounded-lg p-3">
+                                    <h4 class="font-semibold mb-3 flex items-center">
+                                        <i class="fas fa-arrow-left text-blue-400 mr-2"></i>
+                                        왼발 분석
+                                    </h4>
+                                    <div class="space-y-2">
+                                        <div class="ai-item">
+                                            <div class="flex justify-between items-center text-sm mb-1">
+                                                <p>대칭/균형</p>
+                                                <p class="font-semibold text-blue-400">-<span
+                                                        class="text-xs">/100</span></p>
+                                            </div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5">
+                                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="ai-item">
+                                            <div class="flex justify-between items-center text-sm mb-1">
+                                                <p>발의 형태</p>
+                                                <p class="font-semibold text-yellow-400">-<span
+                                                        class="text-xs">/100</span></p>
+                                            </div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5">
+                                                <div class="bg-yellow-500 h-1.5 rounded-full" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 오른발 분석 -->
+                                <div class="bg-gray-800/30 rounded-lg p-3">
+                                    <h4 class="font-semibold mb-3 flex items-center">
+                                        <i class="fas fa-arrow-right text-green-400 mr-2"></i>
+                                        오른발 분석
+                                    </h4>
+                                    <div class="space-y-2">
+                                        <div class="ai-item">
+                                            <div class="flex justify-between items-center text-sm mb-1">
+                                                <p>대칭/균형</p>
+                                                <p class="font-semibold text-blue-400">-<span
+                                                        class="text-xs">/100</span></p>
+                                            </div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5">
+                                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="ai-item">
+                                            <div class="flex justify-between items-center text-sm mb-1">
+                                                <p>발의 형태</p>
+                                                <p class="font-semibold text-yellow-400">-<span
+                                                        class="text-xs">/100</span></p>
+                                            </div>
+                                            <div class="w-full bg-gray-700 rounded-full h-1.5">
+                                                <div class="bg-yellow-500 h-1.5 rounded-full" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 pt-4 border-t border-gray-700/50">
+                                <h4 class="font-semibold mb-2">AI 진단 요약</h4>
+                                <div id="ai-summary" class="text-sm text-gray-400 space-y-1">
+                                    <p>양발 분석이 완료되면 AI 기반 종합 진단 결과를 확인할 수 있습니다.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 리포트 탭 -->
+                        <div id="tab-content-report" class="tab-content hidden">
+                            <h3 class="text-lg font-bold text-white mb-4">리포트 준비</h3>
+                            <div class="bg-gray-800/50 rounded-lg p-4 space-y-3">
+                                <div>
+                                    <p class="text-xs text-gray-400">사용자 정보</p>
+                                    <p id="report-patient-info"></p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400">리포트 ID</p>
+                                    <p id="report-id" class="font-mono">FB-2025-001234</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400">분석 대상</p>
+                                    <p id="report-analysis-type">양발 종합 분석</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 bg-gray-800/50 rounded-lg p-4 space-y-3">
+                                <h4 class="font-semibold">주요 관찰 사항</h4>
+                                <ul id="report-observations"
+                                    class="list-disc list-inside text-sm text-gray-400 space-y-1">
+                                    <li>양발 분석 결과 대기 중...</li>
+                                </ul>
+                            </div>
+                            <div class="mt-6 space-y-2">
+                                <button id="download-report-btn"
+                                    class="w-full report-btn bg-blue-600 hover:bg-blue-700">
+                                    <i class="fas fa-file-pdf mr-2"></i> 양발 종합 리포트 생성
+                                </button>
+                                <button id="generate-qr-btn" class="w-full report-btn bg-gray-600 hover:bg-gray-500">
+                                    <i class="fas fa-share-alt mr-2"></i> 공유하기
+                                </button>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button class="report-btn bg-gray-600 hover:bg-gray-500"><i
+                                            class="fas fa-envelope mr-2"></i> 이메일</button>
+                                    <button class="report-btn bg-gray-600 hover:bg-gray-500"><i
+                                            class="fas fa-print mr-2"></i> 인쇄</button>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <div id="qr-code-container" class="flex justify-center p-2 bg-white rounded-lg hidden">
+                                    <div id="qr-code"></div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">리포트는 생성 후 30일간 보관됩니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </main>
+        </div>
+
+        <script src="./qrcode.min.js"></script>
+
+        <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
+            "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/"
+        }
+    }
+    </script>
+        <script type="module" src="./js/main-application.js"></script>
+        <script>
+            // 환영 페이지와 대시보드 간의 전환 로직
+            document.addEventListener('DOMContentLoaded', () => {
+                const startAppBtn = document.getElementById('start-app-btn');
+                const userNameInput = document.getElementById('user-name-input');
+                const genderButtons = document.querySelectorAll('.gender-btn');
+                let selectedGender = '';
+
+
+                // 사용자 이름 입력 시 버튼 활성화
+                function checkFormCompletion() {
+                    const userName = userNameInput.value.trim();
+                    startAppBtn.disabled = !(userName && selectedGender);
+                }
+
+                userNameInput.addEventListener('input', checkFormCompletion);
+
+                // 성별 버튼 클릭 이벤트 처리
+                genderButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        // 모든 버튼의 활성화 스타일(색상) 제거
+                        genderButtons.forEach(b => b.classList.remove('active'));
+                        // 클릭된 버튼에만 활성화 스타일 추가
+                        btn.classList.add('active');
+                        selectedGender = btn.dataset.gender; // 선택된 성별 저장
+                        checkFormCompletion(); // 버튼 상태 다시 확인
+                    });
+                });
+
+                // "분석 시작하기" 버튼 클릭 시 대시보드로 전환
+                startAppBtn.addEventListener('click', () => {
+                    const userName = userNameInput.value.trim();
+                    if (userName && selectedGender) {
+                        // main-application.js에서 생성한 app 객체에 접근
+                        const waitForApp = () => {
+                            if (window.footAnalyzer && window.footAnalyzer.uiController) {
+                                // UI 컨트롤러에 이름과 성별 정보 전달
+                                window.footAnalyzer.uiController.updatePatientInfo(userName, selectedGender);
+                                window.footAnalyzer.uiController.showDashboard();
+                            } else {
+                                setTimeout(waitForApp, 100); // app이 초기화될 때까지 대기
+                            }
+                        };
+
+                        waitForApp();
+                    }
+                });
+
+                // 기존 파일 업로드 로직 연결
+                document.getElementById('left-foot-upload').addEventListener('click', () => {
+                    document.getElementById('left-file-input').click();
+                });
+
+                document.getElementById('right-foot-upload').addEventListener('click', () => {
+                    document.getElementById('right-file-input').click();
+                });
+            });
+        </script>
+    </body>
+
+</html>
