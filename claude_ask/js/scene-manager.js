@@ -123,7 +123,7 @@ export class SceneManager extends EventTarget {
         this.dualFootModel = new THREE.Group();
         this.dualFootModel.name = 'DualFootModel';
 
-        // 1. 왼발, 오른발 모델 생성
+        // 1. 왼발, 오른발 모델 생성 (미러링 로직 없음)
         this.leftFootModel = this.createFootModel(this.leftGeometry, leftColor, viewType, 'left');
         this.leftFootModel.name = 'LeftFoot';
         
@@ -161,7 +161,7 @@ export class SceneManager extends EventTarget {
     }
 
     /**
-     * 개별 발 모델 생성 (Matrix 미러링 방식 적용)
+     * 개별 발 모델 생성 (미러링 로직 완전 제거)
      */
     createFootModel(geometry, color, viewType, footType) {
         const baseMaterialProps = {
@@ -184,6 +184,7 @@ export class SceneManager extends EventTarget {
                 break;
         }
 
+        // 원본 geometry를 그대로 사용
         const mesh = (viewType === 'points') ? 
             new THREE.Points(geometry, material) : 
             new THREE.Mesh(geometry, material);
@@ -191,18 +192,12 @@ export class SceneManager extends EventTarget {
         const footModel = new THREE.Group();
         footModel.add(mesh);
         footModel.userData.footType = footType;
-
-        // (핵심 수정) 오른발일 경우, Matrix를 이용해 미러링
-        if (footType === 'right') {
-            const mirrorMatrix = new THREE.Matrix4().makeScale(-1, 1, 1);
-            footModel.applyMatrix4(mirrorMatrix);
-        }
         
         return footModel;
     }
 
     /**
-     * 양발 배치 (간격 수정)
+     * 양발 배치 (안정적인 간격 로직으로 수정)
      */
     positionDualFeet() {
         if (!this.leftFootModel || !this.rightFootModel) return;
@@ -210,6 +205,7 @@ export class SceneManager extends EventTarget {
         const leftBox = new THREE.Box3().setFromObject(this.leftFootModel);
         const leftSize = leftBox.getSize(new THREE.Vector3());
         
+        // 발 너비의 60%를 간격으로 설정
         const spacing = leftSize.x * 0.6;
         
         const leftPosition = -(leftSize.x / 2) - (spacing / 2);
