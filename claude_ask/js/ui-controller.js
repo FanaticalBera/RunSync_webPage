@@ -1,5 +1,5 @@
 /**
- * UI 컨트롤러 모듈 - 양발 분석 UI/UX 제어 전담
+ * UI 컨트롤러 모듈 - 양발 분석 UI/UX 제어 전담 (사용자 이름 문제 해결)
  */
 export class UIController extends EventTarget {
     constructor() {
@@ -13,6 +13,8 @@ export class UIController extends EventTarget {
             left: false,
             right: false
         };
+        this.userName = ''; // 🔧 사용자 이름을 인스턴스 변수로 저장
+        this.measurementData = null;
     }
 
     /**
@@ -23,7 +25,8 @@ export class UIController extends EventTarget {
             // 화면
             welcomeScreen: document.getElementById('welcome-screen'),
             dashboardScreen: document.getElementById('dashboard-screen'),
-            
+
+
             // 양발 파일 업로드
             leftFileInput: document.getElementById('left-file-input'),
             rightFileInput: document.getElementById('right-file-input'),
@@ -33,7 +36,7 @@ export class UIController extends EventTarget {
             rightFootStatus: document.getElementById('right-foot-status'),
             startAnalysisBtn: document.getElementById('start-analysis-btn'),
             footUploadSection: document.getElementById('foot-upload-section'),
-            
+
             // 헤더
             patientName: document.getElementById('patient-name'),
             progressBar: document.getElementById('progress-bar'),
@@ -47,11 +50,11 @@ export class UIController extends EventTarget {
             footButtons: document.querySelectorAll('.foot-btn'), // 양발 뷰 선택 버튼
             gridToggle: document.getElementById('grid-toggle'),
             resetViewBtn: document.getElementById('reset-view-btn'),
-            
+
             // 오른쪽 패널 (탭)
             tabButtons: document.querySelectorAll('.tab-btn'),
             tabContents: document.querySelectorAll('.tab-content'),
-            
+
             // 측정값 탭
             measurementFootButtons: document.querySelectorAll('.measurement-foot-btn'),
             lengthValue: document.getElementById('length-value'),
@@ -100,7 +103,7 @@ export class UIController extends EventTarget {
                 this.handleFootFileSelected('left', e.target.files[0]);
             }
         });
-        
+
         this.elements.rightFileInput?.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 this.handleFootFileSelected('right', e.target.files[0]);
@@ -129,8 +132,8 @@ export class UIController extends EventTarget {
             btn.addEventListener('click', () => {
                 this.currentViewFoot = btn.dataset.foot;
                 this.updateActiveButton(this.elements.footButtons, btn);
-                this.dispatchEvent(new CustomEvent('footViewChanged', { 
-                    detail: { foot: btn.dataset.foot } 
+                this.dispatchEvent(new CustomEvent('footViewChanged', {
+                    detail: { foot: btn.dataset.foot }
                 }));
             });
         });
@@ -157,7 +160,7 @@ export class UIController extends EventTarget {
         // 단계 전환 버튼
         this.elements.nextStepBtn?.addEventListener('click', () => this.changeStep(this.currentStep + 1));
         this.elements.prevStepBtn?.addEventListener('click', () => this.changeStep(this.currentStep - 1));
-        
+
         // 리포트 액션
         this.elements.downloadReportBtn?.addEventListener('click', () => this.dispatchEvent(new CustomEvent('reportDownloadRequested')));
         this.elements.generateQrBtn?.addEventListener('click', () => this.dispatchEvent(new CustomEvent('qrGenerationRequested')));
@@ -191,8 +194,8 @@ export class UIController extends EventTarget {
      * 발별 파일 선택 처리
      */
     handleFootFileSelected(foot, file) {
-        this.dispatchEvent(new CustomEvent('footFileSelected', { 
-            detail: { foot, file } 
+        this.dispatchEvent(new CustomEvent('footFileSelected', {
+            detail: { foot, file }
         }));
     }
 
@@ -202,7 +205,7 @@ export class UIController extends EventTarget {
     updateFootUploadStatus(foot, status, fileName = '') {
         this.footUploadStatus[foot] = status;
         const statusElement = this.elements[`${foot}FootStatus`];
-        
+
         if (statusElement) {
             if (status) {
                 statusElement.textContent = `✓ ${fileName}`;
@@ -217,7 +220,7 @@ export class UIController extends EventTarget {
         const canStartAnalysis = this.footUploadStatus.left && this.footUploadStatus.right;
         if (this.elements.startAnalysisBtn) {
             this.elements.startAnalysisBtn.disabled = !canStartAnalysis;
-            this.elements.startAnalysisBtn.className = canStartAnalysis 
+            this.elements.startAnalysisBtn.className = canStartAnalysis
                 ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition'
                 : 'bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition disabled:cursor-not-allowed';
         }
@@ -252,7 +255,7 @@ export class UIController extends EventTarget {
             content.classList.toggle('active', content.id === `tab-content-${tabId}`);
         });
     }
-    
+
     changeStep(targetStep) {
         if (targetStep < 1 || targetStep > 3) return;
         this.currentStep = targetStep;
@@ -274,7 +277,7 @@ export class UIController extends EventTarget {
                 pStep.classList.add('active');
             }
         });
-        
+
         this.elements.prevStepBtn.classList.toggle('hidden', step === 1);
         this.elements.nextStepBtn.classList.toggle('hidden', step === 3);
     }
@@ -301,6 +304,26 @@ export class UIController extends EventTarget {
     }
 
     /**
+     * 🔧 사용자 이름 업데이트 (수정됨)
+     */
+    updatePatientName(name) {
+        // 인스턴스 변수에 사용자 이름 저장
+        this.userName = name;
+
+        // 헤더의 사용자 이름 업데이트
+        if (this.elements.patientName) {
+            this.elements.patientName.textContent = name;
+        }
+
+        // 🔧 리포트 탭의 사용자 정보도 즉시 업데이트
+        if (this.elements.reportPatientInfo) {
+            this.elements.reportPatientInfo.textContent = `${name} (${new Date().toLocaleDateString()})`;
+        }
+
+        console.log('✅ 사용자 이름 업데이트 완료:', name);
+    }
+
+    /**
      * 양발 측정 데이터 저장 및 표시 (확장됨)
      */
     storeMeasurements(leftMeasurements, rightMeasurements, leftAnalysis, rightAnalysis) {
@@ -308,7 +331,7 @@ export class UIController extends EventTarget {
             left: { measurements: leftMeasurements, analysis: leftAnalysis },
             right: { measurements: rightMeasurements, analysis: rightAnalysis }
         };
-        
+
         this.updateMeasurementDisplay();
         this.updateComparisonData();
     }
@@ -320,20 +343,55 @@ export class UIController extends EventTarget {
         if (!this.measurementData || !this.measurementData[this.selectedFoot]) return;
 
         const { measurements, analysis } = this.measurementData[this.selectedFoot];
-        const format = (value) => value ? `${value.toFixed(1)} mm` : '-';
-        
+        // 숫자 포맷팅 함수
+        const format = (value, decimals = 1) => (value ? `${value.toFixed(decimals)} mm` : '-');
+
+        // 값의 범위에 따라 태그 정보(텍스트, 클래스)를 반환하는 함수
+        const getTagInfo = (value, normalRange, optimalRange) => {
+            if (optimalRange && value >= optimalRange[0] && value <= optimalRange[1]) {
+                return { text: '최적', class: 'optimal' };
+            }
+            if (normalRange && value >= normalRange[0] && value <= normalRange[1]) {
+                return { text: '정상', class: 'normal' };
+            }
+            // 범위 밖의 값에 대한 기본 처리
+            if (value < normalRange[0]) return { text: '낮음', class: 'low' };
+            if (value > normalRange[1]) return { text: '높음', class: 'high' };
+
+            return { text: '확인필요', class: 'low' }; // 기본값
+        };
+
+        // DOM 요소에 측정값 업데이트
         if (this.elements.lengthValue) this.elements.lengthValue.textContent = format(measurements.length);
         if (this.elements.widthValue) this.elements.widthValue.textContent = format(measurements.width);
         if (this.elements.heightValue) this.elements.heightValue.textContent = format(measurements.height);
-        
-        const hlRatio = (measurements.height / measurements.length);
+
+        const hlRatio = measurements.height / measurements.length;
         if (this.elements.archRatioValue) this.elements.archRatioValue.textContent = isNaN(hlRatio) ? '-' : hlRatio.toFixed(2);
 
+        // 각 측정값에 대한 태그 정보 생성
+        const tags = {
+            length: getTagInfo(measurements.length, [220, 290]), // 예시: 발 길이 정상 범위 220-290mm
+            width: getTagInfo(measurements.width, [85, 110]),     // 예시: 발 너비 정상 범위 85-110mm
+            height: getTagInfo(measurements.height, [55, 75], [60, 70]), // 예시: 발 높이 정상 55-75mm, 최적 60-70mm
+            archRatio: getTagInfo(hlRatio, [0.18, 0.25]) // 예시: 아치비율 정상 0.18-0.25
+        };
+
+        // 생성된 태그 정보를 실제 DOM에 적용 (ID를 정확히 타겟팅하도록 수정)
+        Object.keys(tags).forEach(key => {
+            const el = document.getElementById(`${key}-tag`); // ID로 직접 요소를 찾습니다.
+            if (el) {
+                el.textContent = tags[key].text;
+                el.className = `tag-display ${tags[key].class}`; // 클래스를 완전히 교체
+            }
+        });
+
+        // 분석 요약 업데이트
         if (this.elements.measurementSummary) {
             this.elements.measurementSummary.innerHTML = `
-                <p><strong>${this.selectedFoot === 'left' ? '왼발' : '오른발'}</strong>: ${analysis.footType || ''} 경향을 보이며, 아치는 ${analysis.archType || ''} 형태입니다.</p>
-                <p>${analysis.description || ''}</p>
-            `;
+            <p><strong>${this.selectedFoot === 'left' ? '왼발' : '오른발'} 분석:</strong> <strong>${analysis.footType || 'N/A'}</strong> 경향을 보이며, 아치는 <strong>${analysis.archType || 'N/A'}</strong> 형태입니다.</p>
+            <p class="text-gray-500 mt-1">${analysis.description || '분석이 완료되면 상세 설명이 표시됩니다.'}</p>
+        `;
         }
     }
 
@@ -355,11 +413,11 @@ export class UIController extends EventTarget {
         const maxLength = Math.max(left.length, right.length);
         const maxWidth = Math.max(left.width, right.width);
         const maxHeight = Math.max(left.height, right.height);
-        
+
         const lengthSymmetry = (1 - lengthDiff / maxLength) * 100;
         const widthSymmetry = (1 - widthDiff / maxWidth) * 100;
         const heightSymmetry = (1 - heightDiff / maxHeight) * 100;
-        
+
         const overallSymmetry = Math.round((lengthSymmetry + widthSymmetry + heightSymmetry) / 3);
 
         // UI 업데이트
@@ -375,7 +433,7 @@ export class UIController extends EventTarget {
         if (this.elements.rightWidthCompare) this.elements.rightWidthCompare.textContent = `${right.width.toFixed(1)} mm`;
         if (this.elements.leftHeightCompare) this.elements.leftHeightCompare.textContent = `${left.height.toFixed(1)} mm`;
         if (this.elements.rightHeightCompare) this.elements.rightHeightCompare.textContent = `${right.height.toFixed(1)} mm`;
-        
+
         const leftArch = (left.height / left.length).toFixed(2);
         const rightArch = (right.height / right.length).toFixed(2);
         if (this.elements.leftArchCompare) this.elements.leftArchCompare.textContent = leftArch;
@@ -393,7 +451,7 @@ export class UIController extends EventTarget {
             } else {
                 summaryText = '양발 간 상당한 차이가 관찰됩니다. 전문의 상담을 권장합니다.';
             }
-            
+
             this.elements.comparisonSummary.innerHTML = `<p>${summaryText}</p>`;
         }
     }
@@ -427,7 +485,7 @@ export class UIController extends EventTarget {
             } else {
                 summaryText = '양발에 주의가 필요한 부분들이 관찰됩니다. 맞춤형 관리를 권장합니다.';
             }
-            
+
             this.elements.aiSummary.innerHTML = `<p>${summaryText}</p>`;
         }
     }
@@ -441,7 +499,7 @@ export class UIController extends EventTarget {
 
         const balanceBar = footSection.querySelector('.bg-blue-500');
         const shapeBar = footSection.querySelectorAll('.bg-yellow-500')[0];
-        
+
         // 대칭/균형 점수 (예시)
         const balanceScore = Math.min(score + Math.random() * 10 - 5, 100);
         const shapeScore = Math.min(score + Math.random() * 10 - 5, 100);
@@ -477,36 +535,47 @@ export class UIController extends EventTarget {
 
         return Math.min(100, Math.max(0, score));
     }
-    
+
     /**
-     * 리포트 데이터 업데이트 (양발 지원)
+     * 🔧 리포트 데이터 업데이트 (양발 지원) - 수정됨
      */
     updateReport(leftMeasurements, rightMeasurements, leftAnalysis, rightAnalysis, leftFileName, rightFileName) {
-        if(this.elements.reportPatientInfo) this.elements.reportPatientInfo.textContent = `김철수 (남성, ${new Date().toLocaleDateString()})`;
-        if(this.elements.reportId) this.elements.reportId.textContent = `FB-${new Date().getFullYear()}-${String(Math.floor(Math.random()*100000)).padStart(6, '0')}`;
-        if(this.elements.reportAnalysisType) this.elements.reportAnalysisType.textContent = '양발 종합 분석';
-        
-        if(this.elements.reportObservations) {
+        // 🔧 저장된 사용자 이름 사용
+        if (this.elements.reportPatientInfo) {
+            this.elements.reportPatientInfo.textContent = `${this.userName} (${new Date().toLocaleDateString()})`;
+        }
+
+        if (this.elements.reportId) {
+            this.elements.reportId.textContent = `FB-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 100000)).padStart(6, '0')}`;
+        }
+
+        if (this.elements.reportAnalysisType) {
+            this.elements.reportAnalysisType.textContent = '양발 종합 분석';
+        }
+
+        if (this.elements.reportObservations) {
             const observations = [];
-            
+
             // 왼발 관찰사항
             if (leftAnalysis.footType) observations.push(`왼발: ${leftAnalysis.footType} 경향`);
             if (leftAnalysis.archType) observations.push(`왼발: ${leftAnalysis.archType}`);
-            
+
             // 오른발 관찰사항
             if (rightAnalysis.footType) observations.push(`오른발: ${rightAnalysis.footType} 경향`);
             if (rightAnalysis.archType) observations.push(`오른발: ${rightAnalysis.archType}`);
-            
+
             // 대칭성 분석
             const lengthDiff = Math.abs(leftMeasurements.length - rightMeasurements.length);
             if (lengthDiff > 5) {
                 observations.push(`양발 길이 차이: ${lengthDiff.toFixed(1)}mm (주의 필요)`);
             }
-            
+
             observations.push('6개월 후 재검사를 권장합니다.');
-            
+
             this.elements.reportObservations.innerHTML = observations.map(obs => `<li>${obs}</li>`).join('');
         }
+
+        console.log('✅ 리포트 업데이트 완료 - 사용자 이름:', this.userName);
     }
 
     /**
@@ -584,12 +653,20 @@ export class UIController extends EventTarget {
     }
 
     /**
+     * 🔧 사용자 이름 반환 메서드 (새로 추가)
+     */
+    getUserName() {
+        return this.userName;
+    }
+
+    /**
      * 정리 (메모리 해제)
      */
     dispose() {
         // 이벤트 리스너들이 자동으로 정리됨
         this.measurementData = null;
         this.footUploadStatus = { left: false, right: false };
+        this.userName = ''; // 🔧 사용자 이름도 정리
         console.log('🧹 UI Controller 정리 완료');
     }
 }

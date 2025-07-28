@@ -17,7 +17,7 @@ class DualFootAnalyzer {
     constructor() {
         this.canvasContainer = document.getElementById('canvas-container');
         this.isInitialized = false;
-        
+
         // 모듈 인스턴스
         this.sceneManager = null;
         this.cameraController = null;
@@ -25,7 +25,7 @@ class DualFootAnalyzer {
         this.measurementEngine = null;
         this.uiController = null;
         this.reportGenerator = null;
-        
+
         // 양발 상태 관리
         this.footData = {
             left: {
@@ -43,7 +43,7 @@ class DualFootAnalyzer {
                 isLoaded: false
             }
         };
-        
+
         this.analysisComplete = false;
         this.animationId = null;
     }
@@ -54,7 +54,7 @@ class DualFootAnalyzer {
     async init() {
         try {
             console.log('🚀 3D 양발 분석기 초기화 시작...');
-            
+
             // 모듈 초기화
             await this.initializeModules();
 
@@ -83,7 +83,7 @@ class DualFootAnalyzer {
         // UI Controller가 가장 먼저 초기화되어야 함
         this.uiController = new UIController();
         this.uiController.initializeElements();
-        
+
         this.sceneManager = new SceneManager(this.canvasContainer);
         this.sceneManager.init();
 
@@ -97,23 +97,24 @@ class DualFootAnalyzer {
         console.log('✅ 모든 모듈 초기화 완료');
     }
 
+
     /**
      * 이벤트 리스너 설정 (양발 분석에 맞게 수정)
      */
     setupEventListeners() {
         // UI Controller 이벤트 설정
         this.uiController.setupEventListeners();
-        
+
         // 양발 파일 선택 이벤트
         this.uiController.addEventListener('footFileSelected', this.handleFootFileSelected.bind(this));
         this.uiController.addEventListener('dualFootAnalysisStarted', this.handleDualFootAnalysisStarted.bind(this));
-        
+
         // 뷰어 제어 이벤트
         this.uiController.addEventListener('viewModeChanged', this.handleViewModeChanged.bind(this));
         this.uiController.addEventListener('footViewChanged', this.handleFootViewChanged.bind(this));
         this.uiController.addEventListener('gridToggleRequested', this.handleGridToggle.bind(this));
         this.uiController.addEventListener('viewResetRequested', this.handleViewResetRequested.bind(this));
-        
+
         // 리포트 관련 이벤트
         this.uiController.addEventListener('reportDownloadRequested', this.handleReportDownloadRequested.bind(this));
         this.uiController.addEventListener('qrGenerationRequested', this.handleQrGenerationRequested.bind(this));
@@ -126,7 +127,7 @@ class DualFootAnalyzer {
         // Measurement Engine 이벤트
         this.measurementEngine.addEventListener('measurementStarted', this.handleMeasurementStarted.bind(this));
         this.measurementEngine.addEventListener('measurementComplete', this.handleMeasurementComplete.bind(this));
-        
+
         // Report Generator 이벤트
         this.reportGenerator.addEventListener('qrGenerated', this.handleQrGenerated.bind(this));
         this.reportGenerator.addEventListener('qrError', (e) => this.uiController.showErrorMessage(e.detail.message));
@@ -162,9 +163,9 @@ class DualFootAnalyzer {
      */
     handleFootFileSelected(event) {
         const { foot, file } = event.detail;
-        
+
         console.log(`📁 ${foot === 'left' ? '왼발' : '오른발'} 파일 선택:`, file.name);
-        
+
         // 파일 유효성 검사
         if (!this.isValidPLYFile(file)) {
             this.uiController.showErrorMessage('PLY 파일만 지원됩니다.');
@@ -174,7 +175,7 @@ class DualFootAnalyzer {
         // 상태 업데이트
         this.footData[foot].fileName = file.name;
         this.uiController.updateFootUploadStatus(foot, false, '로딩 중...');
-        
+
         // 파일 로드
         this.loadFootFile(foot, file);
     }
@@ -192,22 +193,22 @@ class DualFootAnalyzer {
     async loadFootFile(foot, file) {
         try {
             const geometry = await this.loadPLYFile(file);
-            
+
             // 발 데이터 저장
             this.footData[foot].geometry = geometry;
             this.footData[foot].isLoaded = true;
-            
+
             // UI 상태 업데이트
             this.uiController.updateFootUploadStatus(foot, true, file.name);
             this.updateFileNameDisplay();
-            
+
             // 대시보드 표시 (첫 번째 파일이 로드될 때)
             if (!this.isDashboardVisible()) {
                 this.uiController.showDashboard();
             }
-            
+
             console.log(`✅ ${foot === 'left' ? '왼발' : '오른발'} 파일 로드 완료`);
-            
+
         } catch (error) {
             console.error(`❌ ${foot === 'left' ? '왼발' : '오른발'} 파일 로드 실패:`, error);
             this.footData[foot].isLoaded = false;
@@ -266,21 +267,21 @@ class DualFootAnalyzer {
         }
 
         console.log('🔬 양발 분석 시작...');
-        
+
         try {
             // 업로드 섹션 숨기기
             this.uiController.hideUploadSection();
-            
+
             // 양발 모델 표시
             await this.displayBothFeet();
-            
+
             // 양발 측정 수행
             await this.performDualFootMeasurement();
-            
+
             this.analysisComplete = true;
             this.uiController.changeStep(2);
             this.uiController.showSuccessMessage('양발 분석이 완료되었습니다!');
-            
+
         } catch (error) {
             console.error('❌ 양발 분석 실패:', error);
             this.uiController.showErrorMessage('양발 분석 중 오류가 발생했습니다.');
@@ -292,16 +293,16 @@ class DualFootAnalyzer {
      */
     async displayBothFeet() {
         console.log('👣 양발 모델 표시 중...');
-        
+
         // Scene Manager에 양발 geometry 설정
         this.sceneManager.setDualGeometry(
             this.footData.left.geometry,
             this.footData.right.geometry
         );
-        
+
         // (핵심 수정) 모델 뷰 업데이트 함수 이름 변경
         this.sceneManager.updateDualModelView('mesh');
-        
+
         // 카메라 자동 조정
         setTimeout(() => {
             const currentModel = this.sceneManager.getCurrentModel();
@@ -316,37 +317,40 @@ class DualFootAnalyzer {
      */
     async performDualFootMeasurement() {
         console.log('📏 양발 측정 수행 중...');
-        
+
         // 왼발 측정
         const leftMeasurements = await this.measurementEngine.performPreciseMeasurements(
             this.footData.left.geometry,
             this.sceneManager.getLeftFootModel()
         );
-        
+
         // 오른발 측정
         const rightMeasurements = await this.measurementEngine.performPreciseMeasurements(
             this.footData.right.geometry,
             this.sceneManager.getRightFootModel()
         );
-        
+
         // 발별 분석
         const leftAnalysis = this.analyzeFootType(leftMeasurements);
         const rightAnalysis = this.analyzeFootType(rightMeasurements);
-        
+
         // 데이터 저장
         this.footData.left.measurements = leftMeasurements;
         this.footData.left.analysis = leftAnalysis;
         this.footData.right.measurements = rightMeasurements;
         this.footData.right.analysis = rightAnalysis;
-        
+
         // UI 업데이트
         this.uiController.storeMeasurements(
             leftMeasurements, rightMeasurements,
             leftAnalysis, rightAnalysis
         );
-        
+
         this.uiController.updateAIAnalysis(leftAnalysis, rightAnalysis);
-        
+
+        // 🔧 리포트 업데이트 시 사용자 이름 확인
+        const currentUserName = this.uiController.getUserName();
+        console.log('📋 리포트 업데이트 - 현재 사용자 이름:', currentUserName);
         this.uiController.updateReport(
             leftMeasurements, rightMeasurements,
             leftAnalysis, rightAnalysis,
@@ -359,19 +363,19 @@ class DualFootAnalyzer {
      */
     analyzeFootType(measurements) {
         if (!measurements || !measurements.length || !measurements.width || !measurements.height) {
-            return { 
-                footType: 'Analysis Pending', 
-                archType: 'Analysis Pending', 
-                description: 'Insufficient data for comprehensive analysis' 
+            return {
+                footType: 'Analysis Pending',
+                archType: 'Analysis Pending',
+                description: 'Insufficient data for comprehensive analysis'
             };
         }
 
         const lwRatio = measurements.length / measurements.width;
         const hlRatio = measurements.height / measurements.length;
-        
+
         let footType = '';
         let description = '';
-        
+
         if (lwRatio > 2.6) {
             footType = 'Long Foot Type';
             description = 'Elongated foot shape with longer toes and narrow profile';
@@ -382,7 +386,7 @@ class DualFootAnalyzer {
             footType = 'Normal Foot Type';
             description = 'Well-balanced foot proportions with standard dimensions';
         }
-        
+
         let archType = '';
         if (hlRatio > 0.25) {
             archType = 'High Arch';
@@ -391,7 +395,7 @@ class DualFootAnalyzer {
         } else {
             archType = 'Normal Arch';
         }
-        
+
         return { footType, archType, description };
     }
 
@@ -448,7 +452,7 @@ class DualFootAnalyzer {
             this.uiController.showErrorMessage('분석을 완료한 후 리포트를 생성할 수 있습니다.');
             return;
         }
-        
+
         console.log('📄 양발 PDF 리포트 생성 요청');
         this.reportGenerator.generateDualFootPDFReport(
             this.footData.left.measurements,
@@ -465,10 +469,10 @@ class DualFootAnalyzer {
             this.uiController.showErrorMessage('분석을 완료한 후 QR 코드를 생성할 수 있습니다.');
             return;
         }
-        
+
         console.log('📱 양발 QR 코드 생성 요청');
         this.uiController.setQRButtonLoading?.(true);
-        
+
         // 양발 데이터를 하나로 합친 데이터 생성
         const combinedData = this.createCombinedFootData();
         this.reportGenerator.generateQRCode(combinedData, 'dual_foot_analysis');
@@ -480,12 +484,12 @@ class DualFootAnalyzer {
     createCombinedFootData() {
         const leftMeasurements = this.footData.left.measurements;
         const rightMeasurements = this.footData.right.measurements;
-        
+
         // 평균값 계산
         const avgLength = (leftMeasurements.length + rightMeasurements.length) / 2;
         const avgWidth = (leftMeasurements.width + rightMeasurements.width) / 2;
         const avgHeight = (leftMeasurements.height + rightMeasurements.height) / 2;
-        
+
         return {
             length: avgLength,
             width: avgWidth,
@@ -511,9 +515,9 @@ class DualFootAnalyzer {
      */
     handleQrGenerated(event) {
         const { url } = event.detail;
-        
+
         console.log('📱 QR 코드 생성 완료:', url);
-        
+
         // UI Controller의 QR 표시 메서드 호출
         if (this.uiController.displayQRCode) {
             this.uiController.displayQRCode(url);
@@ -524,7 +528,7 @@ class DualFootAnalyzer {
             const qrCodeContainer = document.getElementById('qr-code');
             if (qrCodeContainer) {
                 qrCodeContainer.innerHTML = '';
-                
+
                 try {
                     const qr = new window.QRCode(qrCodeContainer, {
                         text: url,
@@ -534,7 +538,7 @@ class DualFootAnalyzer {
                         colorLight: '#ffffff',
                         correctLevel: window.QRCode.CorrectLevel.L
                     });
-                    
+
                     this.uiController.showSuccessMessage('QR 코드 생성 완료!');
                 } catch (error) {
                     console.error('❌ QR 코드 생성 실패:', error);
@@ -584,7 +588,7 @@ class DualFootAnalyzer {
      */
     loadSampleData() {
         console.log('🧪 테스트용 샘플 데이터 로드');
-        
+
         // 샘플 측정 데이터
         const sampleLeft = {
             length: 254.3,
@@ -593,7 +597,7 @@ class DualFootAnalyzer {
             unit: 'mm',
             confidence: '높음 (샘플)'
         };
-        
+
         const sampleRight = {
             length: 256.1,
             width: 99.2,
@@ -601,41 +605,41 @@ class DualFootAnalyzer {
             unit: 'mm',
             confidence: '높음 (샘플)'
         };
-        
+
         const sampleAnalysisLeft = this.analyzeFootType(sampleLeft);
         const sampleAnalysisRight = this.analyzeFootType(sampleRight);
-        
+
         // 데이터 저장
         this.footData.left.measurements = sampleLeft;
         this.footData.left.analysis = sampleAnalysisLeft;
         this.footData.left.fileName = 'sample_left_foot.ply';
         this.footData.left.isLoaded = true;
-        
+
         this.footData.right.measurements = sampleRight;
         this.footData.right.analysis = sampleAnalysisRight;
         this.footData.right.fileName = 'sample_right_foot.ply';
         this.footData.right.isLoaded = true;
-        
+
         this.analysisComplete = true;
-        
+
         // UI 업데이트
         this.uiController.updateFootUploadStatus('left', true, 'sample_left_foot.ply');
         this.uiController.updateFootUploadStatus('right', true, 'sample_right_foot.ply');
         this.updateFileNameDisplay();
-        
+
         this.uiController.storeMeasurements(
             sampleLeft, sampleRight,
             sampleAnalysisLeft, sampleAnalysisRight
         );
-        
+
         this.uiController.updateAIAnalysis(sampleAnalysisLeft, sampleAnalysisRight);
-        
+
         this.uiController.updateReport(
             sampleLeft, sampleRight,
             sampleAnalysisLeft, sampleAnalysisRight,
             'sample_left_foot.ply', 'sample_right_foot.ply'
         );
-        
+
         this.uiController.showDashboard();
         this.uiController.hideUploadSection();
         this.uiController.changeStep(2);
@@ -704,10 +708,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const app = new DualFootAnalyzer();
         await app.init();
-        
+
         // 개발용 접근 (전역 변수로 설정)
         window.footAnalyzer = app;
-        
+
         // 개발용 단축키 설정
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.includes('192.168')) {
             window.addEventListener('keydown', (e) => {
@@ -722,12 +726,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     app.debugInfo();
                 }
             });
-            
+
             console.log('🔧 개발 모드 활성화:');
             console.log('- Ctrl + Shift + S: 샘플 데이터 로드');
             console.log('- Ctrl + Shift + D: 디버그 정보 출력');
         }
-        
+
     } catch (error) {
         console.error('❌ 양발 분석기 시작 실패:', error);
         // DOM에 직접 에러 메시지 표시
