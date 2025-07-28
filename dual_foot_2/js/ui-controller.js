@@ -13,6 +13,8 @@ export class UIController extends EventTarget {
             left: false,
             right: false
         };
+        this.userName = ''; 
+        this.measurementData = null;
     }
 
     /**
@@ -23,6 +25,7 @@ export class UIController extends EventTarget {
             // 화면
             welcomeScreen: document.getElementById('welcome-screen'),
             dashboardScreen: document.getElementById('dashboard-screen'),
+            
 
             // 양발 파일 업로드
             leftFileInput: document.getElementById('left-file-input'),
@@ -300,6 +303,16 @@ export class UIController extends EventTarget {
         }
     }
 
+    updatePatientName(name) {
+        if (this.elements.patientName) {
+            this.elements.patientName.textContent = name;
+        }
+        if (this.elements.reportPatientInfo) {
+            // 리포트 탭에도 미리 사용자 이름 설정
+            this.elements.reportPatientInfo.textContent = `${name} (${new Date().toLocaleDateString()})`;
+        }
+    }
+
     /**
      * 양발 측정 데이터 저장 및 표시 (확장됨)
      */
@@ -520,7 +533,7 @@ export class UIController extends EventTarget {
      * 리포트 데이터 업데이트 (양발 지원)
      */
     updateReport(leftMeasurements, rightMeasurements, leftAnalysis, rightAnalysis, leftFileName, rightFileName) {
-        if (this.elements.reportPatientInfo) this.elements.reportPatientInfo.textContent = `김철수 (남성, ${new Date().toLocaleDateString()})`;
+        if (this.elements.reportPatientInfo) this.elements.reportPatientInfo.textContent = `${this.userName} ${new Date().toLocaleDateString()})`;
         if (this.elements.reportId) this.elements.reportId.textContent = `FB-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 100000)).padStart(6, '0')}`;
         if (this.elements.reportAnalysisType) this.elements.reportAnalysisType.textContent = '양발 종합 분석';
 

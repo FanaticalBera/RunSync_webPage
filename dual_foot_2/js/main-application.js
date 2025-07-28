@@ -96,6 +96,7 @@ class DualFootAnalyzer {
 
         console.log('✅ 모든 모듈 초기화 완료');
     }
+    
 
     /**
      * 이벤트 리스너 설정 (양발 분석에 맞게 수정)

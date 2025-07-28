@@ -33,85 +33,42 @@
 
     <body class="bg-[var(--base-900)] text-white">
 
-        <!-- 새로운 환영 화면 (랜딩 페이지) -->
+        <!-- 새로운 환영 화면 -->
         <div id="welcome-screen"
-            class="relative flex size-full min-h-screen flex-col overflow-x-hidden transition-opacity duration-500">
-            <header class="sticky top-0 z-50 w-full bg-[var(--base-900)]/80 backdrop-blur-sm">
-                <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <a class="flex items-center gap-3" href="#">
-                                <svg class="h-8 w-8 text-[var(--primary-500)]" fill="none" viewBox="0 0 48 48"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <path
-                                        d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
-                                        fill="currentColor"></path>
-                                </svg>
-                                <h2 class="text-xl font-bold leading-tight tracking-tighter">RunSync</h2>
-                            </a>
-                        </div>
-                        <nav class="hidden items-center gap-8 md:flex">
-                            <a class="text-sm font-medium text-gray-300 transition-colors hover:text-white"
-                                href="#">Home</a>
-                            <a class="text-sm font-medium text-gray-300 transition-colors hover:text-white"
-                                href="#">Features</a>
-                            <a class="text-sm font-medium text-gray-300 transition-colors hover:text-white"
-                                href="#">Pricing</a>
-                            <a class="text-sm font-medium text-gray-300 transition-colors hover:text-white"
-                                href="#">Contact</a>
-                        </nav>
-                        <div class="flex items-center gap-4">
-                            <button id="get-started-btn"
-                                class="inline-flex h-10 items-center justify-center rounded-md bg-[var(--primary-500)] px-6 text-sm font-bold text-white shadow-lg transition-colors hover:bg-[#1681c9] focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)] focus:ring-offset-2 focus:ring-offset-[var(--base-900)]">
-                                Get Started
-                            </button>
-                        </div>
-                    </div>
+            class="flex flex-col items-center justify-center min-h-screen p-4 transition-opacity duration-500">
+            <div class="w-full max-w-2xl text-center">
+
+                <!-- 로고 및 제목 -->
+                <div class="flex items-center justify-center gap-3 mb-4">
+                    <svg class="h-10 w-10 text-blue-500" fill="currentColor" viewBox="0 0 48 48"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z">
+                        </path>
+                    </svg>
+                    <h1 class="text-4xl font-bold tracking-tighter text-white">RunSync</h1>
                 </div>
-            </header>
-            <main class="flex-1">
-                <section class="py-16 sm:py-24 lg:py-32">
-                    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <div class="text-center">
-                            <h1 class="text-4xl font-bold tracking-tighter sm:text-5xl lg:text-6xl">3D 양발분석기</h1>
-                            <p class="mx-auto mt-6 max-w-2xl text-lg text-gray-300">
-                                Explore both feet's unique structure with our advanced 3D analyzer. Rotate, zoom, and
-                                examine every detail for a comprehensive understanding.
-                            </p>
-                        </div>
-                        <div class="mt-12">
-                            <div class="relative mx-auto max-w-4xl">
-                                <div class="aspect-video rounded-xl border border-[var(--secondary-700)] bg-cover bg-center shadow-2xl"
-                                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAopNLM7law9Ak3utcb68UoOJQlqvai0BltCc43n2C5UJgvXHyC6ZI8pYxTx2g_VuPd7sz9TuH2JqTkhsfSKlaZLtOb9UiEcBJoAns8X-OsW_EbG7ougELfycFMr9rjrxIaony2NEaYzgOq6rbQDA41lmXtc4VNph2rAc1nbIskfCsZyxTY1EqLPo0FUBn-yMKLIQd45MWxj2uDM2cuyjMdGrp4e2vfUTB1A2G3F5vfVf3GoNSXGUbrRvu7z71RtQxRe30HcEq0mv8");'>
-                                    <div class="flex h-full w-full items-center justify-center rounded-xl bg-black/30">
-                                        <button
-                                            class="group flex size-20 items-center justify-center rounded-full bg-white/20 text-white transition-all duration-300 hover:scale-110 hover:bg-white/30">
-                                            <svg class="transition-transform duration-300 group-hover:scale-110"
-                                                fill="currentColor" height="36px" viewBox="0 0 256 256" width="36px"
-                                                xmlns="http://www.w3.org/2000/svg">
-                                                <path
-                                                    d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z">
-                                                </path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                            <button id="analyze-foot-btn"
-                                class="inline-flex h-12 items-center justify-center rounded-md bg-[var(--primary-500)] px-8 text-base font-bold text-white shadow-lg transition-transform duration-200 hover:scale-105 hover:bg-[#1681c9] focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)] focus:ring-offset-2 focus:ring-offset-[var(--base-900)]">
-                                Analyze Your Feet
-                            </button>
-                            <a class="inline-flex h-12 items-center justify-center rounded-md border border-[var(--secondary-700)] bg-[var(--secondary-700)] px-8 text-base font-bold text-white shadow-lg transition-transform duration-200 hover:scale-105 hover:border-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-[var(--base-900)]"
-                                href="#">
-                                Learn More
-                            </a>
-                        </div>
+                <p class="text-lg text-gray-400 mb-10">정밀 3D 양발 분석 시스템</p>
+
+                <!-- 사용자 정보 입력 -->
+                <div class="bg-[#252834] p-8 rounded-xl shadow-lg border border-gray-700/50 mb-6">
+                    <h2 class="text-xl font-semibold text-white mb-6">분석을 시작하기 위해 사용자 정보를 입력하세요.</h2>
+                    <div class="mb-4">
+                        <label for="user-name-input" class="sr-only">사용자 이름</label>
+                        <input type="text" id="user-name-input" placeholder="사용자 이름을 입력해주세요"
+                            class="w-full px-4 py-3 bg-[#1C1F29] border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                     </div>
-                </section>
-            </main>
-            <!-- 파일 업로드 -->
+                    <p class="text-xs text-gray-500 mt-2">이 정보는 리포트 생성에 사용됩니다.</p>
+                </div>
+
+                <!-- 파일 업로드 영역은 대시보드 화면에 있으므로 여기서는 시작 버튼만 제공 -->
+                <button id="start-app-btn"
+                    class="w-full max-w-xs mx-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-transform duration-200 hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed disabled:scale-100">
+                    분석 시작하기
+                </button>
+            </div>
+
+            <!-- 파일 입력을 위한 숨겨진 요소들 -->
             <input type="file" id="left-file-input" accept=".ply" class="hidden">
             <input type="file" id="right-file-input" accept=".ply" class="hidden">
         </div>
@@ -577,28 +534,32 @@
     </script>
         <script type="module" src="./js/main-application.js"></script>
         <script>
+            // 환영 페이지와 대시보드 간의 전환 로직
             document.addEventListener('DOMContentLoaded', () => {
-                const leftFileInput = document.getElementById('left-file-input');
-                const rightFileInput = document.getElementById('right-file-input');
-                const getStartedBtn = document.getElementById('get-started-btn');
-                const analyzeFootBtn = document.getElementById('analyze-foot-btn');
+                const startAppBtn = document.getElementById('start-app-btn');
+                const userNameInput = document.getElementById('user-name-input');
 
-                // 기존 단일 파일 업로드 버튼들은 왼발 업로드로 연결
-                const triggerLeftFileInput = (e) => {
-                    e.preventDefault();
-                    leftFileInput.click();
-                };
+                // 사용자 이름 입력 시 버튼 활성화
+                userNameInput.addEventListener('input', () => {
+                    startAppBtn.disabled = userNameInput.value.trim() === '';
+                });
 
-                getStartedBtn.addEventListener('click', triggerLeftFileInput);
-                analyzeFootBtn.addEventListener('click', triggerLeftFileInput);
+                startAppBtn.addEventListener('click', () => {
+                    const userName = userNameInput.value.trim();
+                    if (userName) {
+                        // UI Controller를 통해 대시보드로 전환하고 사용자 이름 전달
+                        window.footAnalyzer.uiController.showDashboard();
+                        window.footAnalyzer.uiController.updatePatientName(userName);
+                    }
+                });
 
-                // 양발 업로드 영역 클릭 이벤트
+                // 기존 파일 업로드 로직 연결
                 document.getElementById('left-foot-upload').addEventListener('click', () => {
-                    leftFileInput.click();
+                    document.getElementById('left-file-input').click();
                 });
 
                 document.getElementById('right-foot-upload').addEventListener('click', () => {
-                    rightFileInput.click();
+                    document.getElementById('right-file-input').click();
                 });
             });
         </script>
