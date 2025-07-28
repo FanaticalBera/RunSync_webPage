@@ -536,7 +536,7 @@ class DualFootAnalyzer {
                         height: 200,
                         colorDark: '#000000',
                         colorLight: '#ffffff',
-                        correctLevel: window.QRCode.CorrectLevel.M
+                        correctLevel: QRCode.CorrectLevel.M
                     });
 
                     this.uiController.showSuccessMessage('QR 코드 생성 완료!');
