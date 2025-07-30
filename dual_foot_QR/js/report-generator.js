@@ -541,7 +541,7 @@ export class ReportGenerator extends EventTarget {
         const jsonString = JSON.stringify(compactData);
         const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
 
-        const ipAddress = '192.168.25.61'; // 실제 IP 주소로 변경 필요
+        const ipAddress = '192.000.00.00'; // 실제 IP 주소로 변경 필요
         const port = '5500';
         const shortURL = `http://${ipAddress}:${port}/mobile-report.html?data=${base64Data}`;
 
